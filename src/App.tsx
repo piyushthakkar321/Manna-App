@@ -695,7 +695,7 @@ function BibleChatTab() {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 160px)',
+      height: 'calc(100vh - 60px)',
       overflow: 'hidden',
     }}>
 
@@ -772,13 +772,13 @@ function BibleChatTab() {
         </div>
       )}
 
-      {/* Fix 1: Messages — flex:1 + overflowY:auto — ONLY this scrolls */}
+      {/* Messages — flex:1 + overflowY:auto — ONLY this scrolls */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        overflowX: 'hidden',
-        padding: '12px 12px 4px',
-        minHeight: 0, // critical — prevents flex child from overflowing parent
+        padding: 12,
+        paddingBottom: 8,
+        minHeight: 0,
       }}>
         {messages.map((m, i) => (
           <div
@@ -830,14 +830,14 @@ function BibleChatTab() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Fix 1: Input row — flexShrink:0 so it NEVER shrinks or scrolls away */}
+      {/* Input row — flexShrink:0, always visible above tab bar */}
       <div style={{
-        padding: '10px 12px 12px',
+        flexShrink: 0,
+        padding: '10px 12px 16px',
         background: c.cream,
         borderTop: '1px solid ' + c.border,
         display: 'flex',
         gap: 8,
-        flexShrink: 0,
       }}>
         <input
           ref={inputRef}
