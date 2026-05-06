@@ -635,84 +635,247 @@ function TodayTab() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // TAB: BIBLE CHAT
 // ═══════════════════════════════════════════════════════════════════════════════
+const WELCOME_MSG = { role: 'assistant', text: "Peace be with you. I'm Logos, your gentle Bible companion. Ask me anything — a verse, a theology question, or simply share what's on your heart. I'm here to walk with you through Scripture. ✝" };
+
 function BibleChatTab() {
   const c = useC();
-  const [messages, setMessages] = useState([{ role: 'assistant', text: "Peace be with you. I'm Logos, your gentle Bible companion. Ask me anything — a verse, a theology question, or simply share what's on your heart. I'm here to walk with you through Scripture. ✝" }]);
+  const [messages, setMessages] = useState([WELCOME_MSG]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, loading]);
+
+  // Fix 3 & 4: Clear conversation, reset to welcome, chips reappear
+  function clearConversation() {
+    setMessages([WELCOME_MSG]);
+    setInput('');
+    setLoading(false);
+    window.speechSynthesis?.cancel();
+  }
 
   async function send(text: string) {
     if (!text.trim() || loading) return;
-    const userMsg = text.trim(); setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMsg }]); setLoading(true);
+    const userMsg = text.trim();
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
+    setLoading(true);
     try {
-      const history = messages.slice(1).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.text }));
+      const history = messages.slice(1).map(m => ({
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        content: m.text,
+      }));
       history.push({ role: 'user', content: userMsg });
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      // Calls Vercel serverless function — API key lives securely on the server
+      const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY || ''}` },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile', max_tokens: 1000,
-          messages: [{ role: 'system', content: "You are Logos, a gentle Bible companion. Always cite ESV verses with book/chapter/verse. Give theological context. Be warm and spiritually nourishing. Use a reverent, pastoral tone. End every response with a reflection question prefaced by 'Reflect:'" }, ...history],
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history }),
       });
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error((e as {error?: {message?: string}})?.error?.message || `Error ${res.status}`); }
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error((e as {error?: string})?.error || 'Server error ' + res.status);
+      }
       const data = await res.json();
-      setMessages(prev => [...prev, { role: 'assistant', text: data.choices?.[0]?.message?.content || "I wasn't able to retrieve a response." }]);
-    } catch (e: any) { setMessages(prev => [...prev, { role: 'assistant', text: `⚠ ${e.message}` }]); }
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        text: data.reply || "I wasn't able to retrieve a response.",
+      }]);
+    } catch (e: any) {
+      setMessages(prev => [...prev, { role: 'assistant', text: '⚠ ' + e.message }]);
+    }
     setLoading(false);
   }
 
+  // Fix 1: Correct flex layout — outer has fixed height, messages scroll, input is always visible
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 112px)' }}>
-      <div style={{ padding: '14px 16px', background: c.cream, borderBottom: '1px solid ' + c.border, display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,' + c.burgundy + ',' + c.ink + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.goldPale, flexShrink: 0 }}>
-          <CrossIcon size={18} />
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: 'calc(100vh - 160px)',
+      overflow: 'hidden',
+    }}>
+
+      {/* ── Logos header with New Conversation button ── */}
+      <div style={{
+        padding: '12px 16px',
+        background: c.cream,
+        borderBottom: '1px solid ' + c.border,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        flexShrink: 0,
+      }}>
+        <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'linear-gradient(135deg,' + c.burgundy + ',' + c.ink + ')', display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.goldPale, flexShrink: 0 }}>
+          <CrossIcon size={17} />
         </div>
-        <div>
-          <p style={{ fontFamily: F.serif, fontSize: 17, color: c.ink, fontWeight: 500 }}>Logos</p>
-          <p style={{ fontFamily: F.sans, fontSize: 11, color: c.warmGray }}>Your Bible Companion</p>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontFamily: F.serif, fontSize: 16, color: c.ink, fontWeight: 500, lineHeight: 1.2 }}>Logos</p>
+          <p style={{ fontFamily: F.sans, fontSize: 10, color: c.warmGray }}>Your Bible Companion</p>
         </div>
+        {/* Fix 3: New Conversation button */}
+        {messages.length > 1 && (
+          <button
+            onClick={clearConversation}
+            style={{
+              background: 'transparent',
+              border: '1px solid ' + c.border,
+              borderRadius: 20,
+              padding: '5px 12px',
+              fontFamily: F.sans,
+              fontSize: 11,
+              color: c.warmGray,
+              cursor: 'pointer',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+            }}
+          >
+            ↺ New
+          </button>
+        )}
       </div>
 
+      {/* Fix 4: Chips reappear when messages.length === 1 (after clear too) */}
       {messages.length === 1 && (
-        <div style={{ padding: '10px 12px 0', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <div style={{
+          padding: '10px 12px 6px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 6,
+          flexShrink: 0,
+          background: c.parchment,
+        }}>
           {SUGGESTED_QUESTIONS.map((q, i) => (
-            <button key={i} onClick={() => send(q)} style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 20, padding: '6px 12px', fontFamily: F.sans, fontSize: 11, color: c.inkLight, cursor: 'pointer', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{q}</button>
+            <button
+              key={i}
+              onClick={() => send(q)}
+              style={{
+                background: c.cream,
+                border: '1px solid ' + c.border,
+                borderRadius: 20,
+                padding: '5px 11px',
+                fontFamily: F.sans,
+                fontSize: 11,
+                color: c.inkLight,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {q}
+            </button>
           ))}
         </div>
       )}
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 12px', overflowX: 'hidden' }}>
+      {/* Fix 1: Messages — flex:1 + overflowY:auto — ONLY this scrolls */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        padding: '12px 12px 4px',
+        minHeight: 0, // critical — prevents flex child from overflowing parent
+      }}>
         {messages.map((m, i) => (
-          <div key={i} className="fade-in" style={{ display: 'flex', justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: 14 }}>
+          <div
+            key={i}
+            className="fade-in"
+            style={{
+              display: 'flex',
+              justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
+              marginBottom: 12,
+            }}
+          >
             {m.role === 'assistant' && (
-              <div style={{ width: 30, height: 30, borderRadius: '50%', background: c.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8, flexShrink: 0, marginTop: 4 }}>
-                <span style={{ color: c.gold, fontSize: 13 }}>✝</span>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', background: c.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 8, flexShrink: 0, marginTop: 4 }}>
+                <span style={{ color: c.gold, fontSize: 12 }}>✝</span>
               </div>
             )}
-            <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: m.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px', background: m.role === 'user' ? 'linear-gradient(135deg,' + c.burgundy + ',' + c.ink + ')' : c.cream, color: m.role === 'user' ? '#fff' : c.ink, fontFamily: F.serif, fontSize: 14, lineHeight: 1.7, border: m.role === 'assistant' ? '1px solid ' + c.border : 'none', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            <div style={{
+              maxWidth: '82%',
+              padding: '9px 13px',
+              borderRadius: m.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+              background: m.role === 'user'
+                ? 'linear-gradient(135deg,' + c.burgundy + ',' + c.ink + ')'
+                : c.cream,
+              color: m.role === 'user' ? '#fff' : c.ink,
+              fontFamily: F.serif,
+              fontSize: 14,
+              lineHeight: 1.65,
+              border: m.role === 'assistant' ? '1px solid ' + c.border : 'none',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+            }}>
               {m.text}
             </div>
           </div>
         ))}
+
         {loading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: c.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ color: c.gold, fontSize: 13 }}>✝</span></div>
-            <div style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: '18px 18px 18px 4px', padding: '10px 18px', display: 'flex', gap: 6 }}>
-              {[0,1,2].map(j => <div key={j} style={{ width: 7, height: 7, borderRadius: '50%', background: c.warmGray, animation: 'pulse 1.2s ease infinite', animationDelay: j*0.2 + 's' }} />)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', background: c.ink, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ color: c.gold, fontSize: 12 }}>✝</span>
+            </div>
+            <div style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: '16px 16px 16px 4px', padding: '10px 16px', display: 'flex', gap: 5 }}>
+              {[0,1,2].map(j => (
+                <div key={j} style={{ width: 6, height: 6, borderRadius: '50%', background: c.warmGray, animation: 'pulse 1.2s ease infinite', animationDelay: j * 0.2 + 's' }} />
+              ))}
             </div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      <div style={{ padding: '10px 12px 14px', background: c.cream, borderTop: '1px solid ' + c.border, display: 'flex', gap: 8 }}>
-        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send(input)} placeholder="Ask about Scripture..." style={{ flex: 1, background: c.parchment, border: '1px solid ' + c.border, borderRadius: 24, padding: '11px 16px', fontFamily: F.serif, fontSize: 14, color: c.ink, outline: 'none', minWidth: 0 }} />
-        <button onClick={() => send(input)} style={{ width: 44, height: 44, borderRadius: '50%', background: c.ink, border: 'none', color: c.gold, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}><SendIcon /></button>
+      {/* Fix 1: Input row — flexShrink:0 so it NEVER shrinks or scrolls away */}
+      <div style={{
+        padding: '10px 12px 12px',
+        background: c.cream,
+        borderTop: '1px solid ' + c.border,
+        display: 'flex',
+        gap: 8,
+        flexShrink: 0,
+      }}>
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send(input)}
+          placeholder="Ask about Scripture..."
+          style={{
+            flex: 1,
+            background: c.parchment,
+            border: '1px solid ' + c.border,
+            borderRadius: 22,
+            padding: '10px 16px',
+            fontFamily: F.serif,
+            fontSize: 14,
+            color: c.ink,
+            outline: 'none',
+            minWidth: 0,
+          }}
+        />
+        <button
+          onClick={() => send(input)}
+          style={{
+            width: 42,
+            height: 42,
+            borderRadius: '50%',
+            background: c.ink,
+            border: 'none',
+            color: c.gold,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          <SendIcon />
+        </button>
       </div>
     </div>
   );
