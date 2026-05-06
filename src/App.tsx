@@ -690,12 +690,12 @@ function BibleChatTab() {
     setLoading(false);
   }
 
-  // Fix 1: Correct flex layout — outer has fixed height, messages scroll, input is always visible
+  // Correct flex layout — outer has fixed height, messages scroll, input always visible
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 60px)',
+      height: 'calc(100vh - 120px)',
       overflow: 'hidden',
     }}>
 
@@ -772,12 +772,11 @@ function BibleChatTab() {
         </div>
       )}
 
-      {/* Messages — flex:1 + overflowY:auto — ONLY this scrolls */}
+      {/* Messages — ONLY this div scrolls */}
       <div style={{
         flex: 1,
         overflowY: 'auto',
-        padding: 12,
-        paddingBottom: 8,
+        padding: '12px 12px 8px',
         minHeight: 0,
       }}>
         {messages.map((m, i) => (
@@ -830,10 +829,10 @@ function BibleChatTab() {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input row — flexShrink:0, always visible above tab bar */}
+      {/* Input row — always visible above tab bar */}
       <div style={{
         flexShrink: 0,
-        padding: '10px 12px 16px',
+        padding: '10px 12px 20px',
         background: c.cream,
         borderTop: '1px solid ' + c.border,
         display: 'flex',
