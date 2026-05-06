@@ -690,18 +690,25 @@ function BibleChatTab() {
     setLoading(false);
   }
 
-  // Correct flex layout — outer has fixed height, messages scroll, input always visible
+  // Fixed layout — fills full screen minus tab bar, input always visible
   return (
     <div style={{
+      position: 'fixed',
+      top: 0,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: '100%',
+      maxWidth: '430px',
+      bottom: '60px',
       display: 'flex',
       flexDirection: 'column',
-      height: 'calc(100vh - 120px)',
-      overflow: 'hidden',
+      background: c.parchment,
+      zIndex: 5,
     }}>
 
-      {/* ── Logos header with New Conversation button ── */}
+      {/* ── Logos header — padded to clear sticky app header ── */}
       <div style={{
-        padding: '12px 16px',
+        padding: '84px 16px 12px',
         background: c.cream,
         borderBottom: '1px solid ' + c.border,
         display: 'flex',
