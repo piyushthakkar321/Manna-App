@@ -1,13 +1,34 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <title>Manna — Daily Bread for the Soul</title>
+    <meta name="description" content="A daily devotional app with Bible chat, prayer journal, and reading plan." />
+
+    <!-- Favicon — SVG works in all modern browsers -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+
+    <!-- iOS Apple Touch Icon — inline SVG as data URI, no PNG file needed -->
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Manna" />
+
+    <!-- Theme color -->
+    <meta name="theme-color" content="#2C1F0E" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Manna — Daily Bread for the Soul" />
+    <meta property="og:description" content="Daily devotionals, Bible chat, prayer journal and reading plan." />
+    <meta property="og:type" content="website" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

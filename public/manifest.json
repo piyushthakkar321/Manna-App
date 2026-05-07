@@ -1,0 +1,18 @@
+{
+    "name": "Manna - Daily Bread for the Soul",
+    "short_name": "Manna",
+    "description": "Daily devotionals, Bible chat, prayer journal and reading plan.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#2C1F0E",
+    "theme_color": "#2C1F0E",
+    "orientation": "portrait",
+    "icons": [
+      {
+        "src": "/favicon.svg",
+        "sizes": "any",
+        "type": "image/svg+xml",
+        "purpose": "any"
+      }
+    ]
+  }
