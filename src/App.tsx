@@ -759,11 +759,11 @@ function TodayTab() {
   return (
     <div style={{ padding: '0 0 140px' }}>
       {/* Hero */}
-      <div style={{ background: 'linear-gradient(160deg,' + c.burgundy + ' 0%,' + c.ink + ' 100%)', padding: '48px 24px 40px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'linear-gradient(160deg,#6B1F2A 0%,#2C1F0E 100%)', padding: '48px 24px 40px', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, opacity: 0.04, backgroundImage: 'repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(255,255,255,.5) 60px),repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(255,255,255,.5) 60px)' }} />
-        <p style={{ fontFamily: F.serif, color: c.goldPale, fontSize: 13, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8, opacity: 0.8 }}>{dateStr}</p>
-        <h1 style={{ fontFamily: F.serif, color: c.cream, fontSize: 30, fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>{todayDevo.title}</h1>
-        <span style={{ background: c.gold, color: c.ink, fontSize: 11, fontWeight: 700, letterSpacing: 2, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase' }}>{todayDevo.theme}</span>
+        <p style={{ fontFamily: F.serif, color: '#F0D98A', fontSize: 13, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 8, opacity: 0.85 }}>{dateStr}</p>
+        <h1 style={{ fontFamily: F.serif, color: '#FBF6EC', fontSize: 30, fontWeight: 500, lineHeight: 1.2, marginBottom: 12 }}>{todayDevo.title}</h1>
+        <span style={{ background: '#B8860B', color: '#2C1F0E', fontSize: 11, fontWeight: 700, letterSpacing: 2, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase' }}>{todayDevo.theme}</span>
       </div>
 
       {/* Weekly Arc Card */}
