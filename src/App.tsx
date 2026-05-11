@@ -373,9 +373,6 @@ function BookIcon({ size = 20 }) {
 function PenIcon({ size = 20 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>;
 }
-function HeartIcon({ size = 20, filled = false }) {
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
-}
 function UsersIcon({ size = 20 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>;
 }
@@ -704,7 +701,7 @@ function TodayTab() {
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [bookmarked, setBookmarked] = useState(() => { const b = ls.getJ<string[]>('manna_bookmarks', []); return b.some((bk: any) => bk.ref === todayDevo.ref); });
-  const [verseKey, setVerseKey] = useState(0);
+  const [_verseKey] = useState(0);
   const [showMilestone, setShowMilestone] = useState(false);
   const [milestoneStreak, setMilestoneStreak] = useState(0);
   const todayStr2 = new Date().toDateString();
@@ -793,7 +790,7 @@ function TodayTab() {
       )}
 
       {/* Scripture Card */}
-      <div key={verseKey} style={{ margin: '0 16px', marginTop: -20, background: c.cream, borderRadius: 16, padding: '28px 24px', boxShadow: '0 4px 32px rgba(44,31,14,0.15)', border: '1px solid ' + c.border }} className={verseKey > 0 ? 'verse-swap' : 'fade-in'}>
+      <div key={_verseKey} style={{ margin: '0 16px', marginTop: -20, background: c.cream, borderRadius: 16, padding: '28px 24px', boxShadow: '0 4px 32px rgba(44,31,14,0.15)', border: '1px solid ' + c.border }} className={_verseKey > 0 ? 'verse-swap' : 'fade-in'}>
         <div style={{ textAlign: 'center', color: c.gold, marginBottom: 16 }}><CrossIcon size={24} /></div>
         <p style={{ fontFamily: F.serif, fontSize: 20, lineHeight: 1.7, color: c.ink, textAlign: 'center', fontStyle: 'italic', marginBottom: 16 }}>"{todayDevo.verse}"</p>
         <p style={{ fontFamily: F.sans, fontSize: 13, color: c.warmGray, textAlign: 'center', letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>— {todayDevo.ref}</p>
@@ -814,6 +811,9 @@ function TodayTab() {
         <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
           <button onClick={() => setShowReflection(r => !r)} style={{ flex: 1, padding: 10, background: 'transparent', border: '1px solid ' + c.border, borderRadius: 10, cursor: 'pointer', color: c.inkLight, fontFamily: F.sans, fontSize: 12, fontWeight: 700 }}>
             {showReflection ? 'Hide Reflection' : '✦ Reflect'}
+          </button>
+          <button onClick={toggleBookmark} title={bookmarked ? 'Remove bookmark' : 'Bookmark verse'} style={{ width: 38, padding: 10, background: bookmarked ? c.gold : 'transparent', border: '1px solid ' + (bookmarked ? c.gold : c.border), borderRadius: 10, cursor: 'pointer', color: bookmarked ? c.ink : c.inkLight, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <BookmarkIcon size={15} filled={bookmarked} />
           </button>
         </div>
 
