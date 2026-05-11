@@ -7,10 +7,10 @@ const C = {
   goldPale: '#F0D98A', cream: '#FBF6EC', burgundy: '#6B1F2A',
   forest: '#2A4A35', sienna: '#8B4513', warmGray: '#9A8F7E', border: '#D4C9A8',
 };
-const F = { serif: "'EB Garamond','Georgia',serif", sans: "'Lato','system-ui',sans-serif" };
+const F = { serif: "'EB Garamond','Georgia',serif", sans: "'Lato','system-ui',sans-serif", display: "'Cormorant Garamond','Georgia',serif" };
 
 const GS = `
-  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;700&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow-x:hidden}
   body{background:${C.parchment};font-family:${F.sans};color:${C.ink};overscroll-behavior:none;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
@@ -29,6 +29,11 @@ const GS = `
   @keyframes splashIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
   .fade-in{animation:fadeIn .4s ease forwards}
   .slide-up{animation:slideUp .35s ease forwards}
+  @keyframes confettiFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+  @keyframes milestoneIn{0%{transform:scale(0.5);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+  @keyframes verseSwap{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+  @keyframes shimmerPull{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+  .verse-swap{animation:verseSwap 0.5s ease forwards}
 `;
 
 // ─── SAFE STORAGE ─────────────────────────────────────────────────────────────
@@ -79,6 +84,148 @@ const getDevoForToday = () => {
 };
 const todayDevo = getDevoForToday();
 
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEATURE 1: ONBOARDING SCREEN
+// ═══════════════════════════════════════════════════════════════════════════════
+const ONBOARDING_SLIDES = [
+  {
+    icon: '✝',
+    title: 'Daily Bread',
+    subtitle: 'A fresh verse and reflection every morning to nourish your soul.',
+    color: '#6B1F2A',
+  },
+  {
+    icon: '💬',
+    title: 'Ask Logos',
+    subtitle: 'Your gentle AI Bible companion. Ask about Scripture, theology, or share what\'s on your heart.',
+    color: '#2A4A35',
+  },
+  {
+    icon: '🙏',
+    title: 'Pray Together',
+    subtitle: 'Journal your prayers, track your reading, and lift up your community on the Prayer Wall.',
+    color: '#8B4513',
+  },
+];
+
+function OnboardingScreen({ onDone }: { onDone: () => void }) {
+  const [slide, setSlide] = useState(0);
+  const [exiting, setExiting] = useState(false);
+
+  function finish() {
+    setExiting(true);
+    lsSet('manna_onboarded', 'true');
+    setTimeout(onDone, 400);
+  }
+
+  function next() {
+    if (slide < ONBOARDING_SLIDES.length - 1) setSlide(s => s + 1);
+    else finish();
+  }
+
+  const s = ONBOARDING_SLIDES[slide];
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9998,
+      background: 'linear-gradient(160deg,' + s.color + ' 0%,#1A0A04 100%)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      padding: '40px 32px',
+      transition: 'background 0.6s ease',
+      opacity: exiting ? 0 : 1,
+      transform: exiting ? 'scale(1.04)' : 'scale(1)',
+      transitionProperty: 'opacity,transform,background',
+      transitionDuration: '0.4s',
+    }}>
+      {/* Skip */}
+      <button onClick={finish} style={{ position: 'absolute', top: 56, right: 24, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', fontFamily: F.sans, fontSize: 13, cursor: 'pointer', letterSpacing: 1 }}>
+        Skip
+      </button>
+
+      {/* Icon */}
+      <div style={{ width: 100, height: 100, borderRadius: 28, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(240,217,138,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, marginBottom: 40, animation: 'splashIn 0.5s ease both' }}>
+        {s.icon}
+      </div>
+
+      {/* Text */}
+      <div style={{ textAlign: 'center', maxWidth: 340, marginBottom: 48, animation: 'splashIn 0.5s ease 0.1s both' }}>
+        <h1 style={{ fontFamily: F.display, fontSize: 42, fontWeight: 300, color: '#F0D98A', marginBottom: 16, lineHeight: 1.1 }}>{s.title}</h1>
+        <p style={{ fontFamily: F.serif, fontSize: 17, color: 'rgba(255,255,255,0.75)', lineHeight: 1.7, fontStyle: 'italic' }}>{s.subtitle}</p>
+      </div>
+
+      {/* Dots */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 40 }}>
+        {ONBOARDING_SLIDES.map((_, i) => (
+          <div key={i} onClick={() => setSlide(i)} style={{ width: i === slide ? 24 : 8, height: 8, borderRadius: 4, background: i === slide ? '#D4A942' : 'rgba(255,255,255,0.3)', transition: 'all 0.3s', cursor: 'pointer' }} />
+        ))}
+      </div>
+
+      {/* Button */}
+      <button onClick={next} style={{ width: '100%', maxWidth: 320, padding: '16px', borderRadius: 16, background: 'linear-gradient(135deg,#B8860B,#8B4513)', border: 'none', color: '#2C1F0E', fontFamily: F.sans, fontSize: 16, fontWeight: 700, cursor: 'pointer', letterSpacing: 1 }}>
+        {slide === ONBOARDING_SLIDES.length - 1 ? '✝ Begin My Journey' : 'Continue →'}
+      </button>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FEATURE 5: STREAK MILESTONE MODAL
+// ═══════════════════════════════════════════════════════════════════════════════
+const MILESTONE_VERSES: Record<number, {verse: string; ref: string}> = {
+  3:  { verse: 'This is the day that the Lord has made; let us rejoice and be glad in it.', ref: 'Psalm 118:24' },
+  7:  { verse: 'Blessed is the man who walks not in the counsel of the wicked... his delight is in the law of the Lord.', ref: 'Psalm 1:1-2' },
+  14: { verse: 'I have stored up your word in my heart, that I might not sin against you.', ref: 'Psalm 119:11' },
+  30: { verse: 'But they who wait for the Lord shall renew their strength; they shall mount up with wings like eagles.', ref: 'Isaiah 40:31' },
+};
+const MILESTONE_DAYS = [3, 7, 14, 30];
+
+function ConfettiPiece({ color, left, delay, size }: { color: string; left: number; delay: number; size: number }) {
+  return (
+    <div style={{
+      position: 'absolute', top: -20, left: left + '%',
+      width: size, height: size * 0.4,
+      background: color, borderRadius: 2,
+      animation: `confettiFall ${1.5 + Math.random()}s ease ${delay}s both`,
+      zIndex: 9999,
+    }} />
+  );
+}
+
+function MilestonModal({ streak, onClose }: { streak: number; onClose: () => void }) {
+  const mv = MILESTONE_VERSES[streak];
+  const confettiColors = ['#D4A942','#B8860B','#F0D98A','#8B3A4A','#3A6B4A','#fff'];
+  const pieces = Array.from({ length: 40 }, (_, i) => ({
+    color: confettiColors[i % confettiColors.length],
+    left: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    size: 6 + Math.random() * 8,
+  }));
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9997, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, overflow: 'hidden' }} onClick={onClose}>
+      {pieces.map((p, i) => <ConfettiPiece key={i} {...p} />)}
+      <div style={{ background: 'linear-gradient(160deg,#3A1A08,#1A0A04)', borderRadius: 24, padding: '36px 28px', maxWidth: 360, width: '100%', border: '1px solid #B8860B', textAlign: 'center', animation: 'milestoneIn 0.5s ease both', position: 'relative', zIndex: 10 }} onClick={e => e.stopPropagation()}>
+        <div style={{ fontSize: 56, marginBottom: 8 }}>🔥</div>
+        <div style={{ fontFamily: F.display, fontSize: 52, color: '#D4A942', fontWeight: 300, lineHeight: 1, marginBottom: 4 }}>{streak}</div>
+        <div style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 4, textTransform: 'uppercase', color: '#B8860B', marginBottom: 24 }}>Day Streak</div>
+        {mv && (
+          <div style={{ background: 'rgba(184,134,11,0.1)', borderRadius: 14, padding: '16px 20px', marginBottom: 24, borderLeft: '3px solid #B8860B' }}>
+            <p style={{ fontFamily: F.serif, fontSize: 15, fontStyle: 'italic', color: '#F0E6D3', lineHeight: 1.7, marginBottom: 8 }}>"{mv.verse}"</p>
+            <p style={{ fontFamily: F.sans, fontSize: 11, color: '#B8860B', letterSpacing: 1.5, textTransform: 'uppercase' }}>— {mv.ref}</p>
+          </div>
+        )}
+        <p style={{ fontFamily: F.serif, fontSize: 14, color: 'rgba(240,217,138,0.6)', marginBottom: 24, fontStyle: 'italic' }}>
+          {streak === 3 ? 'Three days faithful. Keep going.' : streak === 7 ? 'A full week in the Word. You\'re building something real.' : streak === 14 ? 'Two weeks strong. God sees your faithfulness.' : 'Thirty days. This is no longer a habit — it\'s a lifestyle.'}
+        </p>
+        <button onClick={onClose} style={{ width: '100%', padding: 14, borderRadius: 12, background: 'linear-gradient(135deg,#B8860B,#8B4513)', border: 'none', color: '#2C1F0E', fontFamily: F.sans, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+          Continue in Faith ✝
+        </button>
+      </div>
+    </div>
+  );
+}
 
 
 // ─── SPLASH SCREEN ────────────────────────────────────────────────────────────
@@ -139,6 +286,32 @@ const DARK = {
 const ThemeCtx = createContext({ dark: false, toggle: () => {} });
 function useTheme() { return useContext(ThemeCtx); }
 
+
+// ─── WEEKLY ARC THEMES ────────────────────────────────────────────────────────
+const WEEKLY_THEMES = [
+  { theme: 'Stillness',    ref: 'Psalm 46:10',           desc: 'Learning to be quiet before God in a noisy world.' },
+  { theme: 'Gratitude',   ref: '1 Thessalonians 5:18',   desc: 'Training your eyes to see gifts in every season.' },
+  { theme: 'Surrender',   ref: 'Proverbs 3:5-6',         desc: "Releasing control and trusting God's path." },
+  { theme: 'Hope',        ref: 'Romans 15:13',            desc: 'Anchoring your soul to what is unseen but certain.' },
+  { theme: 'Faithfulness',ref: 'Lamentations 3:23',      desc: 'Showing up for God daily, even in small ways.' },
+  { theme: 'Mercy',       ref: 'Micah 6:8',              desc: "Receiving and extending the grace you've been given." },
+  { theme: 'Renewal',     ref: '2 Corinthians 5:17',     desc: 'Letting God make something new from where you are.' },
+  { theme: 'Courage',     ref: 'Joshua 1:9',             desc: 'Stepping forward in faith when fear says otherwise.' },
+];
+const getWeeklyTheme = () => {
+  const weekNum = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 86400000));
+  return WEEKLY_THEMES[weekNum % WEEKLY_THEMES.length];
+};
+
+// ─── EMOTIONAL CHECK-IN ───────────────────────────────────────────────────────
+const CHECK_IN_MOODS = [
+  { emoji: '🕊️', label: 'Peaceful',  prefix: 'From a place of stillness, receive this:' },
+  { emoji: '😔', label: 'Heavy',     prefix: 'In your heaviness, hear this tender word:' },
+  { emoji: '🙏', label: 'Grateful',  prefix: 'From a heart of gratitude, receive this:' },
+  { emoji: '😰', label: 'Anxious',   prefix: 'In your anxiety, be held by this:' },
+  { emoji: '🌿', label: 'Hopeful',   prefix: 'In your expectation, be nourished by this:' },
+];
+
 // ─── READING PLAN ─────────────────────────────────────────────────────────────
 const READING_PLAN = [
   { day: 1, book: 'Genesis', chapter: '1-2', theme: 'Creation' },
@@ -158,11 +331,11 @@ const READING_PLAN = [
 ];
 
 const SUGGESTED_QUESTIONS = [
-  'What does grace mean in the Bible?',
-  'Help me understand the Sermon on the Mount',
-  'Who was King David and why does he matter?',
-  'What is the significance of the cross?',
-  'Explain the Fruit of the Spirit',
+  "Help me sit with today's verse",
+  "I'm struggling with doubt — speak to that",
+  'Guide me into silent reflection',
+  'What does the Church say about suffering?',
+  'Pray with me right now',
 ];
 
 const JOURNAL_PROMPTS = [
@@ -244,6 +417,9 @@ function SunSmallIcon({ size = 20 }) {
 }
 function ClockIcon({ size = 18 }) {
   return <svg width={size} height={size} viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8' strokeLinecap='round' strokeLinejoin='round'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>;
+}
+function BookmarkIcon({ size = 18, filled = false }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>;
 }
 function XIcon({ size = 18 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
@@ -527,6 +703,14 @@ function TodayTab() {
   const [audioActive, setAudioActive] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(() => { const b = ls.getJ<string[]>('manna_bookmarks', []); return b.some((bk: any) => bk.ref === todayDevo.ref); });
+  const [verseKey, setVerseKey] = useState(0);
+  const [showMilestone, setShowMilestone] = useState(false);
+  const [milestoneStreak, setMilestoneStreak] = useState(0);
+  const todayStr2 = new Date().toDateString();
+  const [checkedIn, setCheckedIn] = useState(() => ls.get('manna_checkin_date') === todayStr2);
+  const [checkinMood, setCheckinMood] = useState(() => ls.get('manna_checkin_mood'));
+  const weeklyTheme = getWeeklyTheme();
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const c = useC();
   useEffect(() => () => { if (copyTimerRef.current) clearTimeout(copyTimerRef.current); }, []);
@@ -537,7 +721,6 @@ function TodayTab() {
       setCopied(true);
       copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
     }).catch(() => {
-      // Fallback for browsers without clipboard API
       const ta = document.createElement('textarea');
       ta.value = text; document.body.appendChild(ta); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
@@ -545,12 +728,35 @@ function TodayTab() {
       copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
     });
   }
+
+  function toggleBookmark() {
+    const bookmarks = ls.getJ<any[]>('manna_bookmarks', []);
+    const exists = bookmarks.some((b: any) => b.ref === todayDevo.ref);
+    const updated = exists
+      ? bookmarks.filter((b: any) => b.ref !== todayDevo.ref)
+      : [...bookmarks, { verse: todayDevo.verse, ref: todayDevo.ref, title: todayDevo.title, saved: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) }];
+    ls.setJ('manna_bookmarks', updated);
+    setBookmarked(!exists);
+  }
+
   const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  function doCheckin(moodLabel: string) {
+    lsSet('manna_checkin_date', todayStr2);
+    lsSet('manna_checkin_mood', moodLabel);
+    setCheckinMood(moodLabel);
+    setCheckedIn(true);
+  }
 
   function handleMark() {
     if (marked) return;
     setMarked(true); const s = streak + 1; setStreak(s);
     ls.set('manna_today_date', todayStr); ls.set('manna_streak', String(s));
+    // Check milestone
+    if (MILESTONE_DAYS.includes(s)) {
+      const shownKey = 'manna_milestone_' + s;
+      if (!ls.get(shownKey)) { ls.set(shownKey, 'true'); setMilestoneStreak(s); setShowMilestone(true); }
+    }
   }
 
   return (
@@ -563,8 +769,31 @@ function TodayTab() {
         <span style={{ background: c.gold, color: c.ink, fontSize: 11, fontWeight: 700, letterSpacing: 2, padding: '3px 10px', borderRadius: 20, textTransform: 'uppercase' }}>{todayDevo.theme}</span>
       </div>
 
+      {/* Weekly Arc Card */}
+      <div style={{ margin: '12px 16px 0', background: 'rgba(107,31,42,0.07)', borderRadius: 14, padding: '14px 18px', border: '1px solid rgba(107,31,42,0.15)' }}>
+        <p style={{ fontFamily: F.sans, fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: c.burgundy, marginBottom: 6, opacity: 0.8 }}>This Week</p>
+        <p style={{ fontFamily: F.serif, fontSize: 22, color: c.ink, fontWeight: 500, marginBottom: 2 }}>{weeklyTheme.theme}</p>
+        <p style={{ fontFamily: F.sans, fontSize: 11, color: c.gold, letterSpacing: 1, marginBottom: 6 }}>{weeklyTheme.ref}</p>
+        <p style={{ fontFamily: F.serif, fontSize: 13, color: c.inkLight, fontStyle: 'italic', lineHeight: 1.6 }}>{weeklyTheme.desc}</p>
+      </div>
+
+      {/* Emotional Check-In */}
+      {!checkedIn && (
+        <div className="fade-in" style={{ margin: '12px 16px 0', background: c.cream, borderRadius: 14, padding: '14px 16px', border: '1px solid ' + c.border }}>
+          <p style={{ fontFamily: F.serif, fontSize: 13, color: c.warmGray, fontStyle: 'italic', marginBottom: 12 }}>How are you arriving today?</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            {CHECK_IN_MOODS.map((m) => (
+              <button key={m.label} onClick={() => doCheckin(m.label)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px 4px' }}>
+                <span style={{ fontSize: 22 }}>{m.emoji}</span>
+                <span style={{ fontFamily: F.sans, fontSize: 9, color: c.warmGray }}>{m.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Scripture Card */}
-      <div style={{ margin: '0 16px', marginTop: -20, background: c.cream, borderRadius: 16, padding: '28px 24px', boxShadow: '0 4px 32px rgba(44,31,14,0.15)', border: '1px solid ' + c.border }} className="fade-in">
+      <div key={verseKey} style={{ margin: '0 16px', marginTop: -20, background: c.cream, borderRadius: 16, padding: '28px 24px', boxShadow: '0 4px 32px rgba(44,31,14,0.15)', border: '1px solid ' + c.border }} className={verseKey > 0 ? 'verse-swap' : 'fade-in'}>
         <div style={{ textAlign: 'center', color: c.gold, marginBottom: 16 }}><CrossIcon size={24} /></div>
         <p style={{ fontFamily: F.serif, fontSize: 20, lineHeight: 1.7, color: c.ink, textAlign: 'center', fontStyle: 'italic', marginBottom: 16 }}>"{todayDevo.verse}"</p>
         <p style={{ fontFamily: F.sans, fontSize: 13, color: c.warmGray, textAlign: 'center', letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>— {todayDevo.ref}</p>
@@ -590,19 +819,32 @@ function TodayTab() {
 
         {showReflection && (
           <div style={{ marginTop: 12, padding: 16, background: c.parchmentDark, borderRadius: 10, borderLeft: '3px solid ' + c.gold }} className="fade-in">
+            {checkedIn && checkinMood && (() => {
+              const m = CHECK_IN_MOODS.find(m => m.label === checkinMood);
+              return m ? <p style={{ fontFamily: F.serif, fontSize: 13, color: c.gold, marginBottom: 8, fontStyle: 'italic' }}>{m.prefix}</p> : null;
+            })()}
             <p style={{ fontFamily: F.serif, fontSize: 16, lineHeight: 1.7, color: c.inkLight, fontStyle: 'italic' }}>{todayDevo.reflection}</p>
           </div>
         )}
       </div>
 
-      {/* Streak */}
+      {/* Daily Walk */}
       <div style={{ margin: '16px 16px 0', background: c.cream, borderRadius: 16, padding: '20px 24px', border: '1px solid ' + c.border }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: c.warmGray, marginBottom: 4 }}>Current Streak</p>
-            <p style={{ fontFamily: F.serif, fontSize: 28, color: c.ink, fontWeight: 500 }}>{streak} <span style={{ fontSize: 16, color: c.warmGray }}>days</span></p>
+            <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: c.warmGray, marginBottom: 4 }}>Daily Walk</p>
+            <p style={{ fontFamily: F.serif, fontSize: 20, color: c.ink, fontWeight: 500, lineHeight: 1.3 }}>
+              {streak === 0 ? 'Begin your journey' :
+               streak === 1 ? 'Day one of faith 🕊️' :
+               streak < 7  ? streak + ' days growing' :
+               streak === 7 ? 'One week faithful 🕊️' :
+               streak === 14 ? 'A fortnight of grace' :
+               streak === 30 ? 'Thirty days with God 🌾' :
+               streak >= 100 ? 'A hundred days of bread 🌾' :
+               streak + ' days walking'}
+            </p>
           </div>
-          <div style={{ fontSize: 32 }}>🔥</div>
+          <div style={{ color: c.gold, opacity: 0.85 }}><CrossIcon size={28} /></div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {['S','M','T','W','T','F','S'].map((d, i) => {
@@ -626,8 +868,47 @@ function TodayTab() {
         </button>
       </div>
 
+      <BookmarksSection />
+      {showMilestone && <MilestonModal streak={milestoneStreak} onClose={() => setShowMilestone(false)} />}
       {audioActive && <AudioPlayerBar text={`${todayDevo.verse}. From ${todayDevo.ref}. Reflection: ${todayDevo.reflection}`} onClose={() => setAudioActive(false)} />}
       {shareOpen && <ShareModal verse={todayDevo.verse} verseRef={todayDevo.ref} title={todayDevo.title} onClose={() => setShareOpen(false)} />}
+    </div>
+  );
+}
+
+
+// ─── BOOKMARKS SECTION (rendered in TodayTab when user scrolls) ──────────────
+function BookmarksSection() {
+  const c = useC();
+  const [bookmarks, setBookmarks] = useState(() => ls.getJ<any[]>('manna_bookmarks', []));
+
+  function remove(ref: string) {
+    const updated = bookmarks.filter((b: any) => b.ref !== ref);
+    setBookmarks(updated); ls.setJ('manna_bookmarks', updated);
+  }
+
+  if (bookmarks.length === 0) return (
+    <div style={{ margin: '16px 16px 0', background: c.cream, borderRadius: 16, padding: '28px 20px', border: '1px solid ' + c.border, textAlign: 'center' }}>
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={c.goldLight} strokeWidth="1.2" style={{ marginBottom: 14, opacity: 0.6 }}>
+        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+      </svg>
+      <p style={{ fontFamily: F.serif, fontSize: 16, color: c.warmGray, fontStyle: 'italic' }}>No bookmarks yet</p>
+      <p style={{ fontFamily: F.sans, fontSize: 12, color: c.warmGray, marginTop: 6 }}>Tap the bookmark icon on any verse to save it here.</p>
+    </div>
+  );
+
+  return (
+    <div style={{ margin: '16px 16px 0' }}>
+      <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: c.warmGray, marginBottom: 12 }}>Saved Verses</p>
+      {bookmarks.map((b: any) => (
+        <div key={b.ref} className="fade-in" style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 14, padding: '16px 18px', marginBottom: 10 }}>
+          <p style={{ fontFamily: F.serif, fontSize: 15, fontStyle: 'italic', color: c.ink, lineHeight: 1.7, marginBottom: 8 }}>"{b.verse}"</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ fontFamily: F.sans, fontSize: 11, color: c.gold, letterSpacing: 1, fontWeight: 700 }}>— {b.ref}</p>
+            <button onClick={() => remove(b.ref)} style={{ background: 'transparent', border: 'none', color: c.warmGray, cursor: 'pointer', fontSize: 12, fontFamily: F.sans }}>Remove</button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -720,8 +1001,8 @@ function BibleChatTab() {
           <CrossIcon size={17} />
         </div>
         <div style={{ flex: 1 }}>
-          <p style={{ fontFamily: F.serif, fontSize: 16, color: c.ink, fontWeight: 500, lineHeight: 1.2 }}>Logos</p>
-          <p style={{ fontFamily: F.sans, fontSize: 10, color: c.warmGray }}>Your Bible Companion</p>
+          <p style={{ fontFamily: F.serif, fontSize: 16, color: c.ink, fontWeight: 500, lineHeight: 1.2 }}>Logos — Spiritual Director</p>
+          <p style={{ fontFamily: F.serif, fontSize: 10, color: c.warmGray, fontStyle: 'italic' }}>Not a search engine. A contemplative companion.</p>
         </div>
         {/* Fix 3: New Conversation button */}
         {messages.length > 1 && (
@@ -809,9 +1090,9 @@ function BibleChatTab() {
                 ? 'linear-gradient(135deg,' + c.burgundy + ',' + c.ink + ')'
                 : c.cream,
               color: m.role === 'user' ? '#fff' : c.ink,
-              fontFamily: F.serif,
-              fontSize: 14,
-              lineHeight: 1.65,
+              fontFamily: m.role === 'user' ? F.serif : F.sans,
+              fontSize: m.role === 'user' ? 14 : 13,
+              lineHeight: m.role === 'user' ? 1.65 : 1.7,
               border: m.role === 'assistant' ? '1px solid ' + c.border : 'none',
               whiteSpace: 'pre-wrap',
               wordBreak: 'break-word',
@@ -930,7 +1211,7 @@ function JournalTab() {
           {entries.map((e: any) => (
             <div key={e.id} className="fade-in" style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 12, padding: 16, marginBottom: 10 }}>
               <p style={{ fontFamily: F.sans, fontSize: 11, color: c.warmGray, marginBottom: 6, letterSpacing: 1 }}>{e.date}</p>
-              <p style={{ fontFamily: F.serif, fontSize: 14, fontStyle: 'italic', color: c.inkLight, lineHeight: 1.7 }}>{e.text.length > 200 ? e.text.slice(0, 200) + '...' : e.text}</p>
+              <p style={{ fontFamily: F.serif, fontSize: 14, fontStyle: 'italic', color: c.ink, lineHeight: 1.7 }}>{e.text.length > 200 ? e.text.slice(0, 200) + '...' : e.text}</p>
             </div>
           ))}
         </div>
@@ -968,6 +1249,17 @@ function ReadingPlanTab() {
         <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: c.warmGray, marginBottom: 4 }}>90-Day Plan</p>
         <h2 style={{ fontFamily: F.serif, fontSize: 24, color: c.ink, fontWeight: 500 }}>Through the Word</h2>
       </div>
+      {completed.length === 0 && (
+        <div className="fade-in" style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 16, padding: '28px 20px', marginBottom: 16, textAlign: 'center' }}>
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke={c.goldLight} strokeWidth="1.1" strokeLinecap="round" style={{ marginBottom: 12, opacity: 0.7 }}>
+            <line x1="12" y1="2" x2="12" y2="22"/>
+            <line x1="2" y1="8" x2="22" y2="8"/>
+            <circle cx="12" cy="14" r="6" strokeWidth="0.8" strokeDasharray="2 2"/>
+          </svg>
+          <p style={{ fontFamily: F.serif, fontSize: 17, color: c.ink, marginBottom: 6 }}>Your journey begins today</p>
+          <p style={{ fontFamily: F.sans, fontSize: 12, color: c.warmGray, lineHeight: 1.6 }}>Tap any reading below to mark it complete and begin building your 90-day habit.</p>
+        </div>
+      )}
       <div style={{ background: c.cream, borderRadius: 14, padding: 18, marginBottom: 14, border: '1px solid ' + c.border }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{ fontFamily: F.sans, fontSize: 13, color: c.inkLight }}>Progress</span>
@@ -976,7 +1268,7 @@ function ReadingPlanTab() {
         <div style={{ height: 8, background: c.parchmentDark, borderRadius: 4, overflow: 'hidden' }}>
           <div style={{ width: pct + '%', height: '100%', background: 'linear-gradient(90deg,' + c.gold + ',' + c.sienna + ')', borderRadius: 4, transition: 'width .5s ease' }} />
         </div>
-        <p style={{ fontFamily: F.sans, fontSize: 12, color: c.warmGray, marginTop: 8 }}>{pct}% complete</p>
+        <p style={{ fontFamily: F.sans, fontSize: 12, color: c.inkLight, marginTop: 8 }}>{pct}% complete</p>
       </div>
       <div style={{ background: c.cream, borderRadius: 14, padding: 18, marginBottom: 14, border: '1px solid ' + c.border }}>
         <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: c.warmGray, marginBottom: 12 }}>28-Day Activity</p>
@@ -984,8 +1276,8 @@ function ReadingPlanTab() {
           {heatmap.map((d, i) => <div key={i} style={{ aspectRatio: '1', borderRadius: 4, background: d.active ? c.gold : c.parchmentDark, opacity: d.active ? 1 : 0.5 }} title={d.date} />)}
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 2, background: c.parchmentDark }} /><span style={{ fontFamily: F.sans, fontSize: 10, color: c.warmGray }}>No reading</span>
-          <div style={{ width: 10, height: 10, borderRadius: 2, background: c.gold, marginLeft: 8 }} /><span style={{ fontFamily: F.sans, fontSize: 10, color: c.warmGray }}>Completed</span>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: c.parchmentDark }} /><span style={{ fontFamily: F.sans, fontSize: 10, color: c.inkLight }}>No reading</span>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: c.gold, marginLeft: 8 }} /><span style={{ fontFamily: F.sans, fontSize: 10, color: c.inkLight }}>Completed</span>
         </div>
       </div>
       <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: c.warmGray, marginBottom: 12 }}>Daily Readings</p>
@@ -1007,23 +1299,83 @@ function ReadingPlanTab() {
   );
 }
 
+
+// ─── MOOD-BASED PRAYER GENERATOR ─────────────────────────────────────────────
+const MOODS = [
+  { emoji: '🙏', label: 'Grateful', prompt: 'Write a short, warm prayer of thanksgiving for someone feeling deeply grateful today. Include a relevant Bible verse.' },
+  { emoji: '😔', label: 'Anxious', prompt: 'Write a gentle, comforting prayer for someone feeling anxious and worried. Include a relevant Bible verse about peace.' },
+  { emoji: '✨', label: 'Hopeful', prompt: 'Write an uplifting prayer for someone feeling hopeful and expectant about the future. Include a relevant Bible verse.' },
+  { emoji: '💙', label: 'Struggling', prompt: 'Write a compassionate prayer for someone who is struggling and going through a difficult season. Include a relevant Bible verse.' },
+  { emoji: '😊', label: 'Joyful', prompt: 'Write a celebratory prayer of joy and praise for someone feeling joyful today. Include a relevant Bible verse.' },
+];
+
+function MoodPrayer() {
+  const c = useC();
+  const [activeMood, setActiveMood] = useState<number | null>(null);
+  const [prayer, setPrayer] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function generatePrayer(idx: number) {
+    setActiveMood(idx);
+    setPrayer('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: MOODS[idx].prompt }] }),
+      });
+      const data = await res.json();
+      setPrayer(data.reply || 'Unable to generate prayer. Please try again.');
+    } catch { setPrayer('Unable to generate prayer. Please try again.'); }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ margin: '0 0 20px', background: c.cream, borderRadius: 16, padding: '18px 16px', border: '1px solid ' + c.border }}>
+      <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 2.5, textTransform: 'uppercase', color: c.warmGray, marginBottom: 14 }}>How are you feeling today?</p>
+      <div style={{ display: 'flex', gap: 8, marginBottom: prayer || loading ? 16 : 0, flexWrap: 'wrap' }}>
+        {MOODS.map((m, i) => (
+          <button key={i} onClick={() => generatePrayer(i)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 14px', borderRadius: 14, border: '1px solid ' + (activeMood === i ? c.gold : c.border), background: activeMood === i ? 'rgba(184,134,11,0.1)' : 'transparent', cursor: 'pointer', transition: 'all 0.2s', minWidth: 62 }}>
+            <span style={{ fontSize: 22 }}>{m.emoji}</span>
+            <span style={{ fontFamily: F.sans, fontSize: 10, color: activeMood === i ? c.gold : c.warmGray, fontWeight: activeMood === i ? 700 : 400 }}>{m.label}</span>
+          </button>
+        ))}
+      </div>
+      {loading && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0' }}>
+          <div style={{ width: 20, height: 20, border: '2px solid ' + c.gold, borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+          <span style={{ fontFamily: F.serif, fontSize: 14, color: c.warmGray, fontStyle: 'italic' }}>Composing your prayer...</span>
+        </div>
+      )}
+      {prayer && !loading && (
+        <div className="fade-in" style={{ background: c.parchmentDark, borderRadius: 12, padding: '14px 16px', borderLeft: '3px solid ' + c.gold }}>
+          <p style={{ fontFamily: F.serif, fontSize: 15, lineHeight: 1.8, color: c.ink, fontStyle: 'italic', whiteSpace: 'pre-wrap' }}>{prayer}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // TAB: PRAYER WALL
 // ═══════════════════════════════════════════════════════════════════════════════
 function PrayerWallTab() {
   const c = useC();
   const [prayers, setPrayers] = useState(() => ls.getJ<any[]>('manna_prayers', COMMUNITY_PRAYERS_DEFAULT));
-  const [hearted, setHearted] = useState(() => ls.getJ<number[]>('manna_hearted', []));
+  const [prayed, setPrayed] = useState(() => ls.getJ<number[]>('manna_prayed', []));
   const [showForm, setShowForm] = useState(false);
   const [newPrayer, setNewPrayer] = useState('');
   const [category, setCategory] = useState('Prayer');
   const [shareItem, setShareItem] = useState<any>(null);
 
-  function toggleHeart(id: number) {
-    const isHearted = hearted.includes(id);
-    const uh = isHearted ? hearted.filter(h => h !== id) : [...hearted, id];
-    const up = prayers.map(p => p.id === id ? { ...p, hearts: p.hearts + (isHearted ? -1 : 1) } : p);
-    setHearted(uh); setPrayers(up); ls.setJ('manna_hearted', uh); ls.setJ('manna_prayers', up);
+  function togglePraying(id: number) {
+    const hasPrayed = prayed.includes(id);
+    if (hasPrayed) return; // can only pray once
+    const up = prayers.map(p => p.id === id ? { ...p, hearts: p.hearts + 1 } : p);
+    const upPrayed = [...prayed, id];
+    setPrayed(upPrayed); setPrayers(up);
+    ls.setJ('manna_prayed', upPrayed); ls.setJ('manna_prayers', up);
   }
 
   function submitPrayer() {
@@ -1035,13 +1387,15 @@ function PrayerWallTab() {
 
   return (
     <div style={{ padding: '24px 16px 100px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 16 }}>
         <div>
           <p style={{ fontFamily: F.sans, fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: c.warmGray, marginBottom: 4 }}>Community</p>
           <h2 style={{ fontFamily: F.serif, fontSize: 26, color: c.ink, fontWeight: 500 }}>Prayer Wall</h2>
         </div>
         <button onClick={() => setShowForm(f => !f)} style={{ background: c.ink, border: 'none', color: c.gold, fontFamily: F.sans, fontSize: 13, fontWeight: 700, padding: '10px 18px', borderRadius: 24, cursor: 'pointer' }}>+ Add Prayer</button>
       </div>
+      <MoodPrayer />
+      <p style={{ fontFamily: F.serif, fontSize: 12, fontStyle: 'italic', color: c.warmGray, marginBottom: 14, lineHeight: 1.6 }}>Sharing your prayer invites others to pray with you — not for performance.</p>
 
       {showForm && (
         <div className="fade-in" style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 16, padding: 20, marginBottom: 20 }}>
@@ -1055,7 +1409,7 @@ function PrayerWallTab() {
       )}
 
       {prayers.map((p: any) => {
-        const isHearted = hearted.includes(p.id);
+        const hasPrayed = prayed.includes(p.id);
         const catColor = catColors[p.category] || c.warmGray;
         return (
           <div key={p.id} className="fade-in" style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 16, padding: '18px 20px', marginBottom: 14 }}>
@@ -1071,10 +1425,10 @@ function PrayerWallTab() {
               </div>
               <span style={{ background: catColor + '22', color: catColor, fontSize: 11, fontFamily: F.sans, fontWeight: 700, padding: '3px 10px', borderRadius: 20 }}>{p.category}</span>
             </div>
-            <p style={{ fontFamily: F.serif, fontSize: 15, lineHeight: 1.7, color: c.inkLight, marginBottom: 12, fontStyle: 'italic', wordBreak: 'break-word' }}>"{p.text}"</p>
+            <p style={{ fontFamily: F.serif, fontSize: 15, lineHeight: 1.7, color: c.ink, marginBottom: 12, fontStyle: 'italic', wordBreak: 'break-word' }}>"{p.text}"</p>
             <div style={{ borderTop: '1px solid ' + c.border, paddingTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <button onClick={() => toggleHeart(p.id)} style={{ background: isHearted ? c.burgundy + '18' : 'transparent', border: '1px solid ' + (isHearted ? c.burgundy : c.border), borderRadius: 20, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: isHearted ? c.burgundy : c.warmGray }}>
-                <HeartIcon size={13} filled={isHearted} /><span style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 600 }}>{p.hearts}</span>
+              <button onClick={() => togglePraying(p.id)} style={{ background: hasPrayed ? 'rgba(184,134,11,0.1)' : 'transparent', border: '1px solid ' + (hasPrayed ? c.gold : c.border), borderRadius: 20, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5, cursor: hasPrayed ? 'default' : 'pointer', color: hasPrayed ? c.gold : c.warmGray, transition: 'all 0.2s' }}>
+                <span style={{ fontSize: 13 }}>🙏</span><span style={{ fontFamily: F.sans, fontSize: 12, fontWeight: 600 }}>{p.hearts}</span>
               </button>
               <button onClick={() => setShareItem(p)} style={{ background: 'transparent', border: '1px solid ' + c.border, borderRadius: 20, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: c.warmGray }}>
                 <ShareIcon /><span style={{ fontFamily: F.sans, fontSize: 11 }}>Share</span>
@@ -1097,10 +1451,11 @@ const TABS = [
   { id: 'chat', label: 'Chat', Icon: CrossIcon },
   { id: 'journal', label: 'Journal', Icon: PenIcon },
   { id: 'reading', label: 'Plan', Icon: BookIcon },
-  { id: 'prayer', label: 'Prayer', Icon: UsersIcon },
+  { id: 'prayer', label: 'Pray', Icon: UsersIcon },
 ];
 
 export default function App() {
+  const [onboarded, setOnboarded] = useState(() => lsGet('manna_onboarded', '') === 'true');
   const [splash, setSplash] = useState(() => !sessionStorage.getItem('manna_launched'));
   const [activeTab, setActiveTab] = useState('today');
   const [showNotifPrompt, setShowNotifPrompt] = useState(false);
@@ -1135,7 +1490,8 @@ export default function App() {
 
   return (
     <ThemeCtx.Provider value={themeValue}>
-      {splash && <SplashScreen onDone={() => { sessionStorage.setItem('manna_launched', '1'); setSplash(false); }} />}
+      {!onboarded && <OnboardingScreen onDone={() => setOnboarded(true)} />}
+      {onboarded && splash && <SplashScreen onDone={() => { sessionStorage.setItem('manna_launched', '1'); setSplash(false); }} />}
       <style>{dynamicGS}</style>
       <div style={{ maxWidth: 430, margin: '0 auto', minHeight: '100vh', background: c.parchment, position: 'relative' }}>
         {/* Header */}
