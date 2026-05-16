@@ -4,7 +4,7 @@
 // In-memory rate limiter (resets per cold start — good enough for serverless)
 const rateLimitMap = new Map();
 const WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS = 10;
+const MAX_REQUESTS = 5;
 const MAX_MAP_SIZE = 5000; // safety ceiling
 
 function isRateLimited(ip) {
@@ -51,6 +51,7 @@ export default async function handler(req, res) {
     'unknown';
 
   if (isRateLimited(clientIp)) {
+    await new Promise(r => setTimeout(r, 2000));
     return res.status(429).json({ error: 'Too many requests. Please wait a moment before trying again.' });
   }
 

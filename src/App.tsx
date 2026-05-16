@@ -1227,7 +1227,7 @@ function JournalTab() {
       </div>
       <div style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 14, padding: '16px 16px 16px 20px', marginBottom: 14, position: 'relative' }}>
         <div style={{ position: 'absolute', top: 16, left: 14, width: 1, height: 'calc(100% - 32px)', background: c.goldPale }} />
-        <textarea value={entry} onChange={e => setEntry(e.target.value)} placeholder="Write freely... this is between you and God." style={{ width: '100%', minHeight: 160, background: 'transparent', border: 'none', outline: 'none', fontFamily: F.serif, fontSize: 16, fontStyle: 'italic', color: c.ink, lineHeight: 1.8, paddingLeft: 12, resize: 'none', borderRadius: 0 }} />
+        <textarea value={entry} onChange={e => setEntry(e.target.value.slice(0, 3000))} placeholder="Write freely... this is between you and God." style={{ width: '100%', minHeight: 160, background: 'transparent', border: 'none', outline: 'none', fontFamily: F.serif, fontSize: 16, fontStyle: 'italic', color: c.ink, lineHeight: 1.8, paddingLeft: 12, resize: 'none', borderRadius: 0 }} />
       </div>
       <button onClick={saveEntry} style={{ width: '100%', padding: 15, borderRadius: 12, background: saved ? c.forest : c.ink, border: 'none', color: saved ? '#fff' : c.gold, fontFamily: F.sans, fontSize: 14, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>
         {saved ? '✓  Saved' : 'Save Entry'}
@@ -1416,6 +1416,7 @@ function PrayerWallTab() {
 
   function submitPrayer() {
     if (!newPrayer.trim()) return;
+    if (newPrayer.trim().length > 500) return;
     const p = { id: Date.now(), author: 'You', text: newPrayer, time: 'Just now', hearts: 0, category };
     const updated = [p, ...prayers]; setPrayers(updated); ls.setJ('manna_prayers', updated);
     setNewPrayer(''); setShowForm(false);
@@ -1436,7 +1437,7 @@ function PrayerWallTab() {
       {showForm && (
         <div className="fade-in" style={{ background: c.cream, border: '1px solid ' + c.border, borderRadius: 16, padding: 20, marginBottom: 20 }}>
           <p style={{ fontFamily: F.serif, fontSize: 14, color: c.warmGray, marginBottom: 12, fontStyle: 'italic' }}>"...pray for one another..." — James 5:16</p>
-          <textarea value={newPrayer} onChange={e => setNewPrayer(e.target.value)} placeholder="Share your prayer request..." style={{ width: '100%', minHeight: 100, background: c.parchment, border: '1px solid ' + c.border, borderRadius: 10, padding: 14, fontFamily: F.serif, fontSize: 15, fontStyle: 'italic', color: c.ink, outline: 'none', resize: 'none', marginBottom: 12 }} />
+          <textarea value={newPrayer} onChange={e => setNewPrayer(e.target.value.slice(0, 500))} placeholder="Share your prayer request..." style={{ width: '100%', minHeight: 100, background: c.parchment, border: '1px solid ' + c.border, borderRadius: 10, padding: 14, fontFamily: F.serif, fontSize: 15, fontStyle: 'italic', color: c.ink, outline: 'none', resize: 'none', marginBottom: 12 }} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
             {CATEGORIES.map(cat => <button key={cat} onClick={() => setCategory(cat)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid ' + (category === cat ? catColors[cat] : c.border), background: category === cat ? catColors[cat] : 'transparent', color: category === cat ? '#fff' : c.inkLight, fontFamily: F.sans, fontSize: 12, cursor: 'pointer' }}>{cat}</button>)}
           </div>
