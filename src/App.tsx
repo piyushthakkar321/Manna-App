@@ -544,11 +544,18 @@ function AudioPlayerBar({ text, onClose }: { text: string; onClose: () => void }
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.85; u.pitch = 0.95;
-    const voices = window.speechSynthesis.getVoices();
-    const v = voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en'));
-    if (v) u.voice = v;
-    u.onend = () => { setPlaying(false); setProgress(100); if (intervalRef.current) clearInterval(intervalRef.current); };
-    window.speechSynthesis.speak(u);
+    function assignVoiceAndSpeak() {
+      const voices = window.speechSynthesis.getVoices();
+      const v = voices.find(v => v.lang === 'en-GB') || voices.find(v => v.lang.startsWith('en'));
+      if (v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    }
+
+    if (window.speechSynthesis.getVoices().length > 0) {
+      assignVoiceAndSpeak();
+    } else {
+      window.speechSynthesis.onvoiceschanged = assignVoiceAndSpeak;
+    }
     intervalRef.current = setInterval(() => {
       setProgress(Math.min(((Date.now() - startRef.current) / estimated) * 100, 98));
     }, 200);
@@ -718,11 +725,25 @@ function TodayTab() {
       setCopied(true);
       copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
     }).catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = text; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      setCopied(true);
-      copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        const success = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (success) {
+          setCopied(true);
+          copyTimerRef.current = setTimeout(() => setCopied(false), 2500);
+        } else {
+          setCopied(false);
+        }
+      } catch {
+        setCopied(false);
+      }
     });
   }
 
@@ -880,7 +901,10 @@ function TodayTab() {
 // ─── BOOKMARKS SECTION (rendered in TodayTab when user scrolls) ──────────────
 function BookmarksSection() {
   const c = useC();
-  const [bookmarks, setBookmarks] = useState(() => ls.getJ<any[]>('manna_bookmarks', []));
+  const [bookmarks, setBookmarks] = useState(() => {
+    const raw = ls.getJ<any[]>('manna_bookmarks', []);
+    return Array.isArray(raw) ? raw : [];
+  });
 
   function remove(ref: string) {
     const updated = bookmarks.filter((b: any) => b.ref !== ref);
@@ -1175,7 +1199,10 @@ function JournalTab() {
   const c = useC();
   const [entry, setEntry] = useState('');
   const [saved, setSaved] = useState(false);
-  const [entries, setEntries] = useState(() => ls.getJ<any[]>('manna_journal', []));
+  const [entries, setEntries] = useState(() => {
+    const raw = ls.getJ<any[]>('manna_journal', []);
+    return Array.isArray(raw) ? raw : [];
+  });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
@@ -1225,7 +1252,10 @@ function JournalTab() {
 // ═══════════════════════════════════════════════════════════════════════════════
 function ReadingPlanTab() {
   const c = useC();
-  const [completed, setCompleted] = useState(() => ls.getJ<number[]>('manna_reading', []));
+  const [completed, setCompleted] = useState(() => {
+    const raw = ls.getJ<number[]>('manna_reading', []);
+    return Array.isArray(raw) ? raw : [];
+  });
   const heatmap = (() => {
     const dates = new Set(ls.getJ<string[]>('manna_reading_dates', []));
     return Array.from({ length: 28 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - (27 - i)); return { date: d.toDateString(), active: dates.has(d.toDateString()) }; });
@@ -1362,8 +1392,14 @@ function MoodPrayer() {
 // ═══════════════════════════════════════════════════════════════════════════════
 function PrayerWallTab() {
   const c = useC();
-  const [prayers, setPrayers] = useState(() => ls.getJ<any[]>('manna_prayers', COMMUNITY_PRAYERS_DEFAULT));
-  const [prayed, setPrayed] = useState(() => ls.getJ<number[]>('manna_prayed', []));
+  const [prayers, setPrayers] = useState(() => {
+    const raw = ls.getJ<any[]>('manna_prayers', COMMUNITY_PRAYERS_DEFAULT);
+    return Array.isArray(raw) ? raw : COMMUNITY_PRAYERS_DEFAULT;
+  });
+  const [prayed, setPrayed] = useState(() => {
+    const raw = ls.getJ<number[]>('manna_prayed', []);
+    return Array.isArray(raw) ? raw : [];
+  });
   const [showForm, setShowForm] = useState(false);
   const [newPrayer, setNewPrayer] = useState('');
   const [category, setCategory] = useState('Prayer');
